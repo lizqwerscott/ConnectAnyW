@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_userInfoFile(new JsonFileUtil("./userinfo.json"))
     , m_httpUtil(new HttpUtil(this, new QNetworkAccessManager(this)))
     , m_userInfo(new UserInfo())
-    , m_connectService(new ConnectService(this, m_userInfo))
+    , m_connectService(new ConnectService(this, m_userInfo, m_httpUtil))
 
 {
     ui->setupUi(this);
@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     if (!loadUserInfo()) {
         m_loginDialog->show();
+    } else {
         m_connectService->start();
     }
 
@@ -64,6 +65,9 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+
+    m_connectService->stop();
+
     delete m_userInfoFile;
     delete m_httpUtil;
     delete m_userInfo;
@@ -80,6 +84,7 @@ void MainWindow::on_login_callback(const QString& username)
             m_userInfo->userName = username;
             saveUserInfo();
             refershUserInfo();
+            m_connectService->start();
         } else {
             QMessageBox::warning(this,tr("警告！"), tr("用户名错误"), QMessageBox::Yes);
             m_loginDialog->show();
@@ -93,7 +98,7 @@ bool MainWindow::loadUserInfo()
 
     auto userName = userInfo["username"].toString("-1");
     auto deviceId = userInfo["deviceid"].toString("-1");
-    auto defaultHost = userInfo["defaultHost"].toString("-1");
+    auto defaultHost = userInfo["host"].toString("-1");
 
     if (deviceId != "-1") {
         m_userInfo->deviceId = deviceId;
@@ -109,7 +114,7 @@ bool MainWindow::loadUserInfo()
     if (defaultHost != "-1") {
         m_userInfo->defaultHost = defaultHost;
     } else {
-        m_userInfo->defaultHost = "http://127.0.0.1:4523/m1/2074769-0-default";
+        m_userInfo->defaultHost = "http://101.42.233.83:8686";
     }
 
     if (userName != "-1") {

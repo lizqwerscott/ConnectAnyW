@@ -10,6 +10,8 @@ CONFIG += c++17
 
 SOURCES += \
     Service/connectservice.cpp \
+    data/clipboardmessage.cpp \
+    data/device.cpp \
     data/userinfo.cpp \
     utils/httputil.cpp \
     utils/jsonfileutil.cpp \
@@ -19,6 +21,8 @@ SOURCES += \
 
 HEADERS += \
     Service/connectservice.h \
+    data/clipboardmessage.h \
+    data/device.h \
     data/userinfo.h \
     utils/httputil.h \
     utils/jsonfileutil.h \

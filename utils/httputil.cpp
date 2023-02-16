@@ -1,13 +1,15 @@
 #include "httputil.h"
 #include <QJsonDocument>
 #include <QByteArray>
-#include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
 #include <QDebug>
+#include <QHostInfo>
+
+#include "data/device.h"
 
 HttpUtil::HttpUtil(QObject * parent, QNetworkAccessManager * mgr) : QObject(parent), m_mgr(mgr)
 {
-
+    connect(m_mgr, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpPostFinish(QNetworkReply*)));
 }
 
 HttpUtil::~HttpUtil()
@@ -15,7 +17,7 @@ HttpUtil::~HttpUtil()
     delete m_mgr;
 }
 
-void HttpUtil::httpPost(QString address, QJsonObject obj, HttpPostType type)
+void HttpUtil::httpPost(QString address, QJsonObject obj)
 {
     qDebug() << "Start";
     const QUrl url(address);
@@ -25,32 +27,8 @@ void HttpUtil::httpPost(QString address, QJsonObject obj, HttpPostType type)
     QJsonDocument doc(obj);
     QByteArray data = doc.toJson();
 
-    QNetworkReply *reply = m_mgr->post(request, data);
+    m_mgr->post(request, data);
 
-    QObject::connect(reply, &QNetworkReply::finished, [=]() {
-        if(reply->error() == QNetworkReply::NoError){
-            QString contents = QString::fromUtf8(reply->readAll());
-            qDebug() << TAG << contents;
-            handleError(contents);
-            switch (type) {
-            case HttpPostType::Login:
-                {
-                    bool data = this->m_tempValue.toBool(false);
-                    emit loginResult(data);
-                }
-                break;
-            case HttpPostType::AddClipboard:
-                break;
-            case HttpPostType::UpdateClipboard:
-                break;
-            }
-        }
-        else{
-            QString err = reply->errorString();
-            qDebug() << TAG << err;
-        }
-        reply->deleteLater();
-    });
 }
 
 void HttpUtil::login(QString host, QString username, QString deviceid)
@@ -59,12 +37,83 @@ void HttpUtil::login(QString host, QString username, QString deviceid)
     QJsonObject body;
     body["name"] = username;
 
-    QJsonObject device;
-    device["id"] = deviceid;
 
-    body["device"] = device;
+    Device device(deviceid);
 
-    this->httpPost(address, body, HttpPostType::Login);
+    body["device"] = device.convertJson();
+
+    m_nowType = HttpPostType::Login;
+    httpPost(address, body);
+}
+
+void HttpUtil::addMessage(QString host, QString deviceid, QString clipboardData)
+{
+    QString address = host + "/message/addmessage";
+    QJsonObject body;
+
+    Device device(deviceid);
+    body["device"] = device.convertJson();
+
+    ClipboardMessage clipboard(clipboardData, "text", "");
+    body["message"] = clipboard.convertJson();
+
+    m_nowType = HttpPostType::AddClipboard;
+    httpPost(address, body);
+}
+
+void HttpUtil::updateBaseMessage(QString host, QString deviceid)
+{
+    QString address = host + "/message/updatebase";
+    QJsonObject body;
+
+    Device device(deviceid);
+
+    body["device"] = device.convertJson();
+
+    m_nowType = HttpPostType::UpdateClipboard;
+    httpPost(address, body);
+}
+
+void HttpUtil::httpPostFinish(QNetworkReply *reply)
+{
+    if(reply->error() == QNetworkReply::NoError){
+        QString contents = QString::fromUtf8(reply->readAll());
+        qDebug() << TAG << contents;
+        handleError(contents);
+        switch (m_nowType) {
+        case HttpPostType::Login:
+        {
+            bool data = this->m_tempValue.toBool(false);
+            emit loginResult(data);
+        }
+            break;
+        case HttpPostType::AddClipboard:
+        {
+            bool data = this->m_tempValue.toBool(false);
+            emit addMessageResult(data);
+        }
+            break;
+        case HttpPostType::UpdateClipboard:
+        {
+            QString data = m_tempValue["data"].toString("-1");
+            QString type = m_tempValue["type"].toString("-1");
+            QString date = m_tempValue["date"].toString("-1");
+
+            if (data != "-1" && type != "-1" && date != "-1") {
+                emit updateBaseMessageResult(true, ClipboardMessage(data, type, date));
+            } else {
+                emit updateBaseMessageResult(false, ClipboardMessage());
+            }
+
+        }
+            break;
+        }
+    }
+    else{
+        QString err = reply->errorString();
+        qDebug() << TAG << err;
+    }
+    reply->deleteLater();
 }
 
 void HttpUtil::handleError(QString json)
