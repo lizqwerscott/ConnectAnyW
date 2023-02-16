@@ -3,7 +3,6 @@
 
 Device::Device(QString _id) :
     id(_id),
-    type("Window"),
     hostName(QHostInfo::localHostName())
 {
 
