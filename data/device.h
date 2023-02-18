@@ -13,7 +13,13 @@ public:
 
 public:
     QString id;
-    QString type;
+    #ifdef Q_OS_WIN32
+    QString type = "Window";
+    #endif
+    #ifdef  Q_OS_LINUX
+    QString type = "Linux";
+    #endif
+
     QString hostName;
 };
 
