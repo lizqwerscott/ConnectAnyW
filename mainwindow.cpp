@@ -114,7 +114,7 @@ bool MainWindow::loadUserInfo()
     if (defaultHost != "-1") {
         m_userInfo->defaultHost = defaultHost;
     } else {
-        m_userInfo->defaultHost = "http://101.42.233.83:8686";
+        m_userInfo->defaultHost = "101.42.233.83";
     }
 
     if (userName != "-1") {

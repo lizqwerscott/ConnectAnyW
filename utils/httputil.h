@@ -37,8 +37,8 @@ signals:
     void updateBaseMessageResult(bool ok, ClipboardMessage message);
 
 private:
+    QString generateUrl(QString host, QString query);
     void handleError(QString json);
-
 private:
     QNetworkAccessManager * m_mgr;
     QJsonValue m_tempValue;

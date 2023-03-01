@@ -33,7 +33,7 @@ void HttpUtil::httpPost(QString address, QJsonObject obj)
 
 void HttpUtil::login(QString host, QString username, QString deviceid)
 {
-    QString address = host + "/user/adduser";
+    QString address = generateUrl(host, "/user/adduser");
     QJsonObject body;
     body["name"] = username;
 
@@ -48,7 +48,7 @@ void HttpUtil::login(QString host, QString username, QString deviceid)
 
 void HttpUtil::addMessage(QString host, QString deviceid, QString clipboardData)
 {
-    QString address = host + "/message/addmessage";
+    QString address = generateUrl(host, "/message/addmessage");
     QJsonObject body;
 
     Device device(deviceid);
@@ -63,7 +63,7 @@ void HttpUtil::addMessage(QString host, QString deviceid, QString clipboardData)
 
 void HttpUtil::updateBaseMessage(QString host, QString deviceid)
 {
-    QString address = host + "/message/updatebase";
+    QString address = generateUrl(host, "/message/updatebase");
     QJsonObject body;
 
     Device device(deviceid);
@@ -114,6 +114,11 @@ void HttpUtil::httpPostFinish(QNetworkReply *reply)
         qDebug() << TAG << err;
     }
     reply->deleteLater();
+}
+
+QString HttpUtil::generateUrl(QString host, QString query)
+{
+    return QString("http://" + host + ":8686" + query);
 }
 
 void HttpUtil::handleError(QString json)

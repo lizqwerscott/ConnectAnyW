@@ -6,6 +6,7 @@
 
 #include <data/userinfo.h>
 #include <utils/httputil.h>
+#include <utils/websocketutil.h>
 
 class ConnectService : public QObject
 {
@@ -30,6 +31,8 @@ private:
     QString m_clipboardData;
 
     HttpUtil * m_httpUtil;
+
+    WebSocketUtil * m_webSocketUtil;
 
     const QString TAG = "ConnectService:";
 };

@@ -1,5 +1,4 @@
-QT       += core gui network
-
+QT       += core gui network websockets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -17,7 +16,8 @@ SOURCES += \
     utils/jsonfileutil.cpp \
     logindialog.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    utils/websocketutil.cpp
 
 HEADERS += \
     Service/connectservice.h \
@@ -27,7 +27,8 @@ HEADERS += \
     utils/httputil.h \
     utils/jsonfileutil.h \
     logindialog.h \
-    mainwindow.h
+    mainwindow.h \
+    utils/websocketutil.h
 
 FORMS += \
     logindialog.ui \
